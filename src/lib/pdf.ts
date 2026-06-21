@@ -24,7 +24,11 @@ function header(doc: jsPDF, brand: BrandSettingsRow) {
   // small logo top-left + Quadro wordmark
   if (brand.logo_url) {
     try {
-      doc.addImage(brand.logo_url, "PNG", MARGIN, MARGIN - 4, 10, 10);
+      const props = doc.getImageProperties(brand.logo_url);
+      const ratio = props.width / props.height;
+      const hLogoH = 12;
+      const hLogoW = hLogoH * ratio;
+      doc.addImage(brand.logo_url, "PNG", MARGIN, MARGIN - 4, hLogoW, hLogoH, undefined, "NONE");
     } catch {}
   } else {
     doc.setDrawColor(GOLD);
@@ -61,7 +65,7 @@ function drawCover(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
   // Cover image
   if (brand.cover_url) {
     try {
-      doc.addImage(brand.cover_url, "JPEG", 0, 0, PAGE_W, PAGE_H, undefined, "FAST");
+      doc.addImage(brand.cover_url, "JPEG", 0, 0, PAGE_W, PAGE_H, undefined, "NONE");
     } catch {}
   }
   // Heavy dark veil
@@ -81,19 +85,26 @@ function drawCover(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
   doc.setFontSize(8);
   doc.text(brand.establishment || "EST. — RK FILMS", PAGE_W / 2, 36, { align: "center" });
 
-  // Logo (centered, bigger)
+  // Logo (centered, large, aspect-ratio-correct)
   if (brand.logo_url) {
     try {
-      doc.addImage(brand.logo_url, "PNG", PAGE_W / 2 - 18, PAGE_H / 2 - 40, 36, 36);
+      const props = doc.getImageProperties(brand.logo_url);
+      const maxLogoSize = 90; // mm — big and prominent on cover
+      const ratio = props.width / props.height;
+      const logoW = ratio >= 1 ? maxLogoSize : maxLogoSize * ratio;
+      const logoH = ratio >= 1 ? maxLogoSize / ratio : maxLogoSize;
+      const logoX = PAGE_W / 2 - logoW / 2;
+      const logoY = PAGE_H / 2 - logoH / 2 - 15;
+      doc.addImage(brand.logo_url, "PNG", logoX, logoY, logoW, logoH, undefined, "NONE");
     } catch {}
   } else {
     doc.setDrawColor(GOLD);
     doc.setLineWidth(0.6);
-    doc.circle(PAGE_W / 2, PAGE_H / 2 - 22, 16);
+    doc.circle(PAGE_W / 2, PAGE_H / 2 - 22, 22);
     doc.setTextColor(GOLD);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(28);
-    doc.text("RK", PAGE_W / 2, PAGE_H / 2 - 18, { align: "center" });
+    doc.setFontSize(36);
+    doc.text("RK", PAGE_W / 2, PAGE_H / 2 - 16, { align: "center" });
   }
 
   // Tagline (serif feel via "times")
@@ -149,10 +160,10 @@ function drawAbout(doc: jsPDF, brand: BrandSettingsRow) {
 
   doc.setTextColor(TEXT);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10.5);
+  doc.setFontSize(11);
   const text = brand.about_text || "Adicione um texto institucional nas configurações de identidade da marca.";
   const lines = doc.splitTextToSize(text, PAGE_W - MARGIN * 2);
-  doc.text(lines, MARGIN, 68, { lineHeightFactor: 1.55 });
+  doc.text(lines, MARGIN, 68, { lineHeightFactor: 1.65 });
 
   footer(doc, "01 / SOBRE NÓS");
 }
@@ -197,7 +208,7 @@ function drawPortfolio(doc: jsPDF, brand: BrandSettingsRow) {
       doc.setFillColor(PANEL);
       doc.rect(x, y, cellW, cellH, "F");
       try {
-        doc.addImage(url, "JPEG", x, y, cellW, cellH, undefined, "FAST");
+        doc.addImage(url, "JPEG", x, y, cellW, cellH, undefined, "NONE");
       } catch {}
       doc.setDrawColor(BORDER);
       doc.setLineWidth(0.1);
@@ -386,7 +397,7 @@ function drawProposal(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
 }
 
 export async function generateProposalPdf(p: ProposalRow, brand: BrandSettingsRow): Promise<Blob> {
-  const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
+  const doc = new jsPDF({ unit: "mm", format: "a4", compress: false });
   drawCover(doc, p, brand);
   doc.addPage();
   drawAbout(doc, brand);
