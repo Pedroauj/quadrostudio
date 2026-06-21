@@ -226,7 +226,9 @@ function Index() {
           <BrandSettings
             value={brand}
             onSave={async (next) => {
-              const payload = { ...next, user_id: userId };
+              const { updated_at, ...rest } = next;
+              void updated_at;
+              const payload = { ...rest, user_id: userId };
               const { error } = await (supabase as any)
                 .from("brand_settings")
                 .upsert(payload, { onConflict: "user_id" });
