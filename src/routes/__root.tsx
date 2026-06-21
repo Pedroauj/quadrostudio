@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Gerador de propostas comerciais da RK Films." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Quadro — RK Films" },
+      { name: "twitter:description", content: "Gerador de propostas comerciais da RK Films." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/9b6e6d64-7874-42fe-83e3-a1418fb092ed" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/9b6e6d64-7874-42fe-83e3-a1418fb092ed" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
