@@ -1,0 +1,19 @@
+{
+  "name": "Quadro — RK Films",
+  "short_name": "Quadro",
+  "description": "Gerador de propostas comerciais da RK Films.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#131315",
+  "theme_color": "#131315",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
