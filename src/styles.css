@@ -74,7 +74,7 @@
     border-color: var(--color-border);
   }
   html {
-    overflow-y: scroll; /* always reserve scrollbar space — prevents layout shift between tabs */
+    scrollbar-gutter: stable; /* reserves scrollbar space without forcing it visible */
   }
   body {
     background-color: var(--color-background);
