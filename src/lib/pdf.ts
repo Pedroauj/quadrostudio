@@ -270,10 +270,10 @@ function drawProposal(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
 
   const drawBlock = (x: number, label: string, lines: Array<[string, string]>) => {
     doc.setFillColor(PANEL);
-    doc.rect(x, y, colW, 44, "F");
+    doc.rect(x, y, colW, 50, "F");
     doc.setDrawColor(BORDER);
     doc.setLineWidth(0.1);
-    doc.rect(x, y, colW, 44, "S");
+    doc.rect(x, y, colW, 50, "S");
     doc.setTextColor(GOLD);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
@@ -306,7 +306,7 @@ function drawProposal(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
     ["Título", p.project_title],
     ["Validade", `${p.validity_days} dias`],
   ]);
-  y += 50;
+  y += 56;
 
   if (p.project_description) {
     doc.setTextColor(MUTED);
