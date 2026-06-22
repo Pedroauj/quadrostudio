@@ -292,7 +292,7 @@ function Header({
           </div>
         </details>
       </div>
-      <nav className="max-w-5xl mx-auto px-2 md:px-4 flex gap-1 overflow-x-hidden">
+      <nav className="max-w-5xl mx-auto px-2 md:px-4 flex gap-1">
         {tabs.map((t) => (
           <button
             key={t.id}
