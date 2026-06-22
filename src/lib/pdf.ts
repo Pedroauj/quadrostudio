@@ -208,7 +208,24 @@ function drawPortfolio(doc: jsPDF, brand: BrandSettingsRow) {
       doc.setFillColor(PANEL);
       doc.rect(x, y, cellW, cellH, "F");
       try {
-        doc.addImage(url, "JPEG", x, y, cellW, cellH, undefined, "NONE");
+        const props = doc.getImageProperties(url);
+        const imgRatio = props.width / props.height;
+        const cellRatio = cellW / cellH;
+        let drawW: number, drawH: number, drawX: number, drawY: number;
+        if (imgRatio > cellRatio) {
+          // wider than cell — fit by width
+          drawW = cellW;
+          drawH = cellW / imgRatio;
+          drawX = x;
+          drawY = y + (cellH - drawH) / 2;
+        } else {
+          // taller than cell — fit by height
+          drawH = cellH;
+          drawW = cellH * imgRatio;
+          drawX = x + (cellW - drawW) / 2;
+          drawY = y;
+        }
+        doc.addImage(url, "JPEG", drawX, drawY, drawW, drawH, undefined, "NONE");
       } catch {}
       doc.setDrawColor(BORDER);
       doc.setLineWidth(0.1);
