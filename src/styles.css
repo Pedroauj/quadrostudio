@@ -95,3 +95,29 @@
     box-shadow: 0 0 0 1px var(--gold);
   }
 }
+
+/* ── Animations ─────────────────────────────────────────────────── */
+
+@keyframes tab-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.anim-tab-enter {
+  animation: tab-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);    }
+}
+.anim-toast {
+  animation: toast-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes dropdown-enter {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.anim-dropdown {
+  animation: dropdown-enter 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

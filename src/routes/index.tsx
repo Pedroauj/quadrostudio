@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthScreen } from "@/components/auth-screen";
 import { ProposalForm } from "@/components/proposal-form";
@@ -176,72 +176,78 @@ function Index() {
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 pt-6">
         {tab === "novo" && (
-          <ProposalForm
-            initial={editing}
-            onSave={async (state) => {
-              await saveProposal(state);
-            }}
-            onGeneratePdf={async (state) => {
-              const row = await saveProposal(state);
-              if (row) await generatePdfFor(row);
-            }}
-            onClear={() => setEditing(null)}
-          />
+          <div className="anim-tab-enter">
+            <ProposalForm
+              initial={editing}
+              onSave={async (state) => {
+                await saveProposal(state);
+              }}
+              onGeneratePdf={async (state) => {
+                const row = await saveProposal(state);
+                if (row) await generatePdfFor(row);
+              }}
+              onClear={() => setEditing(null)}
+            />
+          </div>
         )}
 
         {tab === "historico" && (
-          <HistoryList
-            rows={proposals}
-            loading={loadingProposals}
-            onOpen={(p) => {
-              setEditing(p);
-              setTab("novo");
-            }}
-            onDuplicate={async (p) => {
-              const { id, sequence_number, created_at, updated_at, ...rest } = p as any;
-              void id; void sequence_number; void created_at; void updated_at;
-              const { data, error } = await (supabase as any)
-                .from("proposals")
-                .insert({ ...rest, project_title: `${p.project_title} (cópia)` })
-                .select()
-                .single();
-              if (error) return alert(error.message);
-              await reloadProposals();
-              setEditing(data as ProposalRow);
-              setTab("novo");
-              showToast("Proposta duplicada.");
-            }}
-            onPdf={generatePdfFor}
-            onDelete={async (p) => {
-              if (!confirm(`Excluir proposta Nº ${String(p.sequence_number).padStart(4, "0")}?`)) return;
-              const { error } = await (supabase as any).from("proposals").delete().eq("id", p.id);
-              if (error) return alert(error.message);
-              if (editing?.id === p.id) setEditing(null);
-              await reloadProposals();
-            }}
-          />
+          <div className="anim-tab-enter">
+            <HistoryList
+              rows={proposals}
+              loading={loadingProposals}
+              onOpen={(p) => {
+                setEditing(p);
+                setTab("novo");
+              }}
+              onDuplicate={async (p) => {
+                const { id, sequence_number, created_at, updated_at, ...rest } = p as any;
+                void id; void sequence_number; void created_at; void updated_at;
+                const { data, error } = await (supabase as any)
+                  .from("proposals")
+                  .insert({ ...rest, project_title: `${p.project_title} (cópia)` })
+                  .select()
+                  .single();
+                if (error) return alert(error.message);
+                await reloadProposals();
+                setEditing(data as ProposalRow);
+                setTab("novo");
+                showToast("Proposta duplicada.");
+              }}
+              onPdf={generatePdfFor}
+              onDelete={async (p) => {
+                if (!confirm(`Excluir proposta Nº ${String(p.sequence_number).padStart(4, "0")}?`)) return;
+                const { error } = await (supabase as any).from("proposals").delete().eq("id", p.id);
+                if (error) return alert(error.message);
+                if (editing?.id === p.id) setEditing(null);
+                await reloadProposals();
+              }}
+            />
+          </div>
         )}
 
         {tab === "marca" && (
-          <BrandSettings
-            value={brand}
-            onSave={async (next) => {
-              const { updated_at, ...rest } = next;
-              void updated_at;
-              const payload = { ...rest, user_id: userId };
-              const { error } = await (supabase as any)
-                .from("brand_settings")
-                .upsert(payload, { onConflict: "user_id" });
-              if (error) return alert(error.message);
-              await loadBrand();
-              showToast("Identidade salva.");
-            }}
-          />
+          <div className="anim-tab-enter">
+            <BrandSettings
+              value={brand}
+              onSave={async (next) => {
+                const { updated_at, ...rest } = next;
+                void updated_at;
+                const payload = { ...rest, user_id: userId };
+                const { error } = await (supabase as any)
+                  .from("brand_settings")
+                  .upsert(payload, { onConflict: "user_id" });
+                if (error) return alert(error.message);
+                await loadBrand();
+                showToast("Identidade salva.");
+              }}
+            />
+          </div>
         )}
       </main>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--panel-2)] border border-[var(--gold)]/50 text-foreground text-sm px-4 py-2 rounded-md shadow-lg">
+        <div className="anim-toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--panel-2)] border border-[var(--gold)]/50 text-foreground text-sm px-4 py-2 rounded-md shadow-lg">
           {toast}
         </div>
       )}
@@ -265,6 +271,24 @@ function Header({
     { id: "historico", label: "Histórico" },
     { id: "marca", label: "Identidade da marca" },
   ];
+
+  const navRef = useRef<HTMLElement>(null);
+  const [ind, setInd] = useState({ left: 0, width: 0, visible: false });
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const btn = nav.querySelector<HTMLElement>(`[data-tab="${tab}"]`);
+    if (!btn) return;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    setInd({
+      left: btnRect.left - navRect.left + 8,
+      width: btnRect.width - 16,
+      visible: true,
+    });
+  }, [tab]);
+
   return (
     <header className="border-b border-border bg-[var(--panel)]/40 backdrop-blur sticky top-0 z-20">
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
@@ -278,38 +302,46 @@ function Header({
           </div>
         </div>
         <details className="relative">
-          <summary className="list-none cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+          <summary className="list-none cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors duration-150">
             {email || "Conta"}
           </summary>
-          <div className="absolute right-0 mt-2 w-44 bg-[var(--panel-2)] border border-border rounded shadow-lg p-1 z-30">
+          <div className="anim-dropdown absolute right-0 mt-2 w-44 bg-[var(--panel-2)] border border-border rounded shadow-lg p-1 z-30">
             <button
               type="button"
               onClick={onSignOut}
-              className="w-full text-left text-xs px-3 py-2 hover:bg-[var(--panel)] rounded text-foreground"
+              className="w-full text-left text-xs px-3 py-2 hover:bg-[var(--panel)] rounded text-foreground transition-colors duration-150"
             >
               Sair
             </button>
           </div>
         </details>
       </div>
-      <nav className="max-w-5xl mx-auto px-2 md:px-4 flex gap-1">
+      <nav ref={navRef} className="relative max-w-5xl mx-auto px-2 md:px-4 flex gap-1">
         {tabs.map((t) => (
           <button
             key={t.id}
+            data-tab={t.id}
             type="button"
             onClick={() => onTab(t.id)}
-            className={`relative px-3 md:px-4 py-2.5 text-xs md:text-sm whitespace-nowrap transition ${
+            className={`px-3 md:px-4 py-2.5 text-xs md:text-sm whitespace-nowrap transition-colors duration-200 ${
               tab === t.id
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.label}
-            {tab === t.id && (
-              <span className="absolute left-2 right-2 -bottom-px h-px bg-[var(--gold)]" />
-            )}
           </button>
         ))}
+        {/* single gold indicator that slides between tabs */}
+        <span
+          className="pointer-events-none absolute bottom-0 h-px bg-[var(--gold)]"
+          style={{
+            left: ind.left,
+            width: ind.width,
+            opacity: ind.visible ? 1 : 0,
+            transition: "left 0.28s cubic-bezier(0.4,0,0.2,1), width 0.28s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        />
       </nav>
     </header>
   );
