@@ -89,31 +89,31 @@ function drawCover(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
   if (brand.logo_url) {
     try {
       const props = doc.getImageProperties(brand.logo_url);
-      const maxLogoSize = 90; // mm — big and prominent on cover
+      const maxLogoSize = 65; // mm — prominent on cover without dominating
       const ratio = props.width / props.height;
       const logoW = ratio >= 1 ? maxLogoSize : maxLogoSize * ratio;
       const logoH = ratio >= 1 ? maxLogoSize / ratio : maxLogoSize;
       const logoX = PAGE_W / 2 - logoW / 2;
-      const logoY = PAGE_H / 2 - logoH / 2 - 15;
+      const logoY = PAGE_H / 2 - logoH / 2 - 25;
       doc.addImage(brand.logo_url, "PNG", logoX, logoY, logoW, logoH, undefined, "NONE");
     } catch {}
   } else {
     doc.setDrawColor(GOLD);
     doc.setLineWidth(0.6);
-    doc.circle(PAGE_W / 2, PAGE_H / 2 - 22, 22);
+    doc.circle(PAGE_W / 2, PAGE_H / 2 - 32, 18);
     doc.setTextColor(GOLD);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(36);
-    doc.text("RK", PAGE_W / 2, PAGE_H / 2 - 16, { align: "center" });
+    doc.setFontSize(28);
+    doc.text("RK", PAGE_W / 2, PAGE_H / 2 - 27, { align: "center" });
   }
 
   // Tagline (serif feel via "times")
   if (brand.tagline) {
     doc.setTextColor(TEXT);
     doc.setFont("times", "italic");
-    doc.setFontSize(15);
+    doc.setFontSize(14);
     const lines = doc.splitTextToSize(brand.tagline, PAGE_W - MARGIN * 4);
-    doc.text(lines, PAGE_W / 2, PAGE_H / 2 + 10, { align: "center" });
+    doc.text(lines, PAGE_W / 2, PAGE_H / 2 + 30, { align: "center" });
   }
 
   // Footer block on cover
@@ -327,10 +327,24 @@ function drawProposal(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
   y += 4;
 
   for (const item of p.items) {
-    const descLines = item.description
+    // Set fonts BEFORE splitting so widths are measured accurately.
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    const priceStr = formatCurrency(item.value);
+    const priceW = doc.getTextWidth(priceStr);
+    const nameMaxW = PAGE_W - MARGIN * 2 - 8 - priceW - 6;
+    const nameLines: string[] = doc.splitTextToSize(item.name || "Item sem nome", nameMaxW);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    const descLines: string[] = item.description
       ? doc.splitTextToSize(item.description, PAGE_W - MARGIN * 2 - 8)
       : [];
-    const h = 14 + descLines.length * 4;
+
+    const nameH = nameLines.length * 5;
+    const recH = item.highlighted ? 4 : 0;
+    const descH = descLines.length * 4;
+    const h = 6 + nameH + recH + (descH ? descH + 2 : 0) + 4;
     y = ensureSpace(doc, y, h + 4, brand);
 
     if (item.highlighted) {
@@ -350,27 +364,28 @@ function drawProposal(doc: jsPDF, p: ProposalRow, brand: BrandSettingsRow) {
     doc.setTextColor(TEXT);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(item.name || "Item sem nome", MARGIN + 4, y + 6);
+    doc.text(nameLines, MARGIN + 4, y + 6, { lineHeightFactor: 1.25 });
 
     doc.setTextColor(GOLD);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(formatCurrency(item.value), PAGE_W - MARGIN - 4, y + 6, { align: "right" });
+    doc.text(priceStr, PAGE_W - MARGIN - 4, y + 6, { align: "right" });
+
+    let cursor = y + 6 + nameH;
 
     if (item.highlighted) {
       doc.setTextColor(GOLD);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
-      doc.text("RECOMENDADO", MARGIN + 4, y + 11);
+      doc.text("RECOMENDADO", MARGIN + 4, cursor + 2);
+      cursor += recH;
     }
 
     if (descLines.length) {
       doc.setTextColor(MUTED);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
-      doc.text(descLines, MARGIN + 4, y + (item.highlighted ? 16 : 12), {
-        lineHeightFactor: 1.4,
-      });
+      doc.text(descLines, MARGIN + 4, cursor + 4, { lineHeightFactor: 1.4 });
     }
 
     y += h + 3;
