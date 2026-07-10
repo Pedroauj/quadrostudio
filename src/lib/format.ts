@@ -39,6 +39,13 @@ export function parseCurrency(masked: string): number {
 
 export function formatDateBR(iso: string): string {
   if (!iso) return "—";
+  // Parse ISO (YYYY-MM-DD) as a local date to avoid UTC timezone shifts
+  // that push the day back by 1 in BR (UTC-3).
+  const isoMatch = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, day] = isoMatch;
+    return `${day}/${m}/${y}`;
+  }
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
